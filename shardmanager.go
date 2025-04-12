@@ -10,6 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// defaultShardIndexFunc is the default function used to calculate the shard index
+// based on the provided key and the number of shards.
 var defaultShardIndexFunc = func(key any, numShards int) (int, error) {
 	switch v := key.(type) {
 	case int:
@@ -25,6 +27,7 @@ var defaultShardIndexFunc = func(key any, numShards int) (int, error) {
 	return 0, errors.New("shard key type not supported")
 }
 
+// ShardManager manages a set of database shards and provides methods to interact with them.
 type ShardManager struct {
 	mu             sync.Mutex
 	shards         []*pgxpool.Pool
@@ -32,6 +35,8 @@ type ShardManager struct {
 	shardIndexFunc func(key any, numShards int) (int, error)
 }
 
+// New creates a new ShardManager instance by initializing connections to the provided
+// database connection strings. It returns an error if any connection fails.
 func New(ctx context.Context, connectionStrings []string) (*ShardManager, error) {
 	shards := make([]*pgxpool.Pool, len(connectionStrings))
 
@@ -50,12 +55,16 @@ func New(ctx context.Context, connectionStrings []string) (*ShardManager, error)
 	}, nil
 }
 
+// SetShardIndexFunc sets a custom shard index function to determine which shard
+// to use based on the provided key.
 func (s *ShardManager) SetShardIndexFunc(ctx context.Context, f func(key any, count int) (int, error)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.shardIndexFunc = f
 }
 
+// Shard returns the database shard corresponding to the provided key.
+// It uses the shard index function to determine the appropriate shard.
 func (s *ShardManager) Shard(ctx context.Context, key any) (*pgxpool.Pool, error) {
 	index, err := s.shardIndexFunc(key, s.numShards)
 	if err != nil {
@@ -69,6 +78,7 @@ func (s *ShardManager) Shard(ctx context.Context, key any) (*pgxpool.Pool, error
 	return s.shards[index], nil
 }
 
+// Shards returns all the database shards managed by the ShardManager.
 func (s *ShardManager) Shards(ctx context.Context) ([]*pgxpool.Pool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -76,6 +86,8 @@ func (s *ShardManager) Shards(ctx context.Context) ([]*pgxpool.Pool, error) {
 	return s.shards, nil
 }
 
+// Ping checks the connectivity of all shards by pinging each one.
+// It returns an error if any shard is unreachable.
 func (s *ShardManager) Ping(ctx context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -89,6 +101,7 @@ func (s *ShardManager) Ping(ctx context.Context) error {
 	return nil
 }
 
+// Close closes all the database connections managed by the ShardManager.
 func (s *ShardManager) Close(ctx context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
