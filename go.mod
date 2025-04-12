@@ -2,6 +2,11 @@ module github.com/ruizu/go-pgxshard
 
 go 1.23.3
 
+retract (
+	v0.0.1
+	v0.0.2
+)
+
 require github.com/jackc/pgx/v5 v5.7.4
 
 require (

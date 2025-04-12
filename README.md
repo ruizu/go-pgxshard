@@ -1,3 +1,5 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/ruizu/go-pgxshard.svg)](https://pkg.go.dev/github.com/ruizu/go-pgxshard)
+
 # go-pgxshard - PostgreSQL sharding for Golang
 
 go-pgxshard is a Golang module that provides a simple and efficient way to manage and interact with multiple PostgreSQL database shards using the [`pgxpool`](https://pkg.go.dev/github.com/jackc/pgx/v5/pgxpool) library. It allows developers to distribute data across multiple shards and provides utility methods for shard management, connectivity, and querying.
